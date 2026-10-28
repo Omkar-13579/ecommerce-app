@@ -1,7 +1,6 @@
 
 import ProductCard from "@/components/productcard";
 
-
 const products = [
   {
     id: 1,
@@ -38,6 +37,7 @@ export default function ProductsPage() {
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (
           <ProductCard
+            id={product.id}
             key={product.id}
             name={product.name}
             price={product.price}

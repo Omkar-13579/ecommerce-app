@@ -1,7 +1,9 @@
-
+"use client";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/context/CartContext";
 
 type ProductCardProps = {
+  id: number;
   name: string;
   price: number;
   category: string;
@@ -9,11 +11,13 @@ type ProductCardProps = {
 };
 
 export default function ProductCard({
+  id,
   name,
   price,
   category,
   image,
 }: ProductCardProps) {
+  const { addToCart } = useCart();
   return (
     <div className="overflow-hidden rounded-xl border bg-white">
       <img
@@ -33,9 +37,18 @@ export default function ProductCard({
           ₹{price.toLocaleString("en-IN")}
         </p>
 
-        <Button className="mt-4 w-full">
-          Add to Cart
-        </Button>
+        <Button
+          className="mt-4 w-full"
+          onClick={() =>
+            addToCart({
+            id: id ,
+            name,
+            price,
+          })
+  }
+>
+  Add to Cart
+</Button>
       </div>
     </div>
   );
