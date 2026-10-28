@@ -1,11 +1,9 @@
 
-import Navbar from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
-      <Navbar />
 
       <section className="px-8 py-20 text-center">
         <h1 className="text-4xl font-bold">
