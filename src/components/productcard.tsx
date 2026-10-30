@@ -45,10 +45,10 @@ export default function ProductCard({
             name,
             price,
           })
-  }
->
-  Add to Cart
-</Button>
+         }
+        >
+          Add to Cart
+        </Button>
       </div>
     </div>
   );

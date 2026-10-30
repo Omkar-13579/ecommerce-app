@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShoppingCart, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
+import { useRouter } from "next/navigation";
 import {
   Sheet,
   SheetContent,
@@ -20,6 +21,8 @@ export default function Navbar() {
     0
   );
 
+    const router = useRouter();
+
   return (
     <nav className="flex items-center justify-between border-b bg-white px-6 py-4">
       <Link href="/" className="text-2xl font-bold">
@@ -32,14 +35,15 @@ export default function Navbar() {
         <Link href="/about">About</Link>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label={`Shopping cart, ${cartCount} items`}
-        >
-          <ShoppingCart />
-          <span>{cartCount}</span>
+      <div className="flex items-center gap-2">  
+       <Button
+        variant="outline"
+        size="icon"
+        aria-label="Shopping cart"
+        onClick={() => router.push("/cart")}
+      >
+        <ShoppingCart />
+        <span>{cartCount}</span>
         </Button>
 
         <div className="md:hidden">
