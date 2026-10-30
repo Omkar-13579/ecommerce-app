@@ -5,7 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 
 export default function CartPage() {
-  const { cart, removeFromCart } = useCart();
+  const { cart, removeFromCart, updateQuantity } = useCart();
 
   const total = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -22,28 +22,44 @@ export default function CartPage() {
         </p>
       ) : (
         <div className="mt-8 space-y-4">
-          {cart.map((item) => (
+          {cart.map((item) => (  
             <div
-              key={item.id}
-              className="flex items-center justify-between rounded-xl border bg-white p-6"
+                key={item.id}
+                className="flex items-center justify-between rounded-xl border bg-white p-6"
             >
-              <div>
-                <h2 className="font-semibold">{item.name}</h2>
-                <p className="text-gray-600">
-                  ₹{item.price.toLocaleString("en-IN")} × {item.quantity}
-                </p>
-              </div>
+            <h2 className="font-semibold">{item.name}</h2>
 
-              <p className="font-bold">
-                ₹{(item.price * item.quantity).toLocaleString("en-IN")}
-              </p>
+            <p className="text-gray-600">
+                ₹{item.price.toLocaleString("en-IN")} each
+            </p>
 
-              <Button
-                variant="destructive"
-                onClick={() => removeFromCart(item.id)}
-              >
-                Remove
-              </Button>
+            <div className="mt-3 flex items-center gap-3">
+                <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                disabled={item.quantity === 1}
+                >
+                −
+                </Button>
+
+                <span>{item.quantity}</span>
+
+                <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                >
+                +
+                </Button>
+
+                <Button
+                    variant="destructive"
+                    onClick={() => removeFromCart(item.id)}
+                    >
+                    Remove
+                </Button>
+            </div>
             </div>
           ))}
 
