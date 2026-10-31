@@ -6,8 +6,10 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   type ReactNode,
 } from "react";
+import { authClient } from "@/lib/auth-client";
 
 type CartItem = {
   id: number;
@@ -27,64 +29,124 @@ const CartContext = createContext<CartContextType | undefined>(
   undefined
 );
 
-
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { data: session, isPending } = authClient.useSession();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
+  const userId = session?.user?.id;
 
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
+  const loadCart = useCallback(async () => {
+    if (!userId) {
+      setCart([]);
+      setIsLoaded(true);
+      return;
     }
 
-    setIsLoaded(true);
-  }, []);
+    setIsLoaded(false);
 
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
-  }, [cart, isLoaded]);
+    try {
+      const response = await fetch("/api/cart");
 
-  function addToCart(product: Omit<CartItem, "quantity">) {
-    setCart((currentCart) => {
-      const existingItem = currentCart.find(
-        (item) => item.id === product.id
-      );
-
-      if (existingItem) {
-        return currentCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+      if (!response.ok) {
+        throw new Error("Failed to load cart");
       }
 
-      return [...currentCart, { ...product, quantity: 1 }];
+      const items: CartItem[] = await response.json();
+      setCart(items);
+    } catch (error) {
+      console.error("Could not load cart:", error);
+      setCart([]);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (isPending) return;
+
+    let cancelled = false;
+
+    async function load() {
+      setIsLoaded(false);
+
+      if (!userId) {
+        setCart([]);
+        setIsLoaded(true);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/cart");
+
+        if (!response.ok) {
+          throw new Error("Failed to load cart");
+        }
+
+        const items: CartItem[] = await response.json();
+
+        if (!cancelled) setCart(items);
+      } catch (error) {
+        console.error("Could not load cart:", error);
+        if (!cancelled) setCart([]);
+      } finally {
+        if (!cancelled) setIsLoaded(true);
+      }
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, isPending]);
+
+  async function addToCart(product: Omit<CartItem, "quantity">) {
+    if (!userId || !isLoaded) {
+      alert("Please log in to add items to your cart.");
+      return;
+    }
+
+    const response = await fetch("/api/cart", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...product, productId: product.id }),
     });
+
+    if (!response.ok) {
+      alert("Could not add item to cart.");
+      return;
+    }
+
+    await loadCart();
   }
 
-  function removeFromCart(id: number) {
-    setCart((currentCart) =>
-      currentCart.filter((item) => item.id !== id)
-    );
+  async function removeFromCart(id: number) {
+    const response = await fetch("/api/cart", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId: id }),
+    });
+
+    if (response.ok) await loadCart();
   }
 
-  function updateQuantity(id: number, quantity: number) {
-  if (quantity < 1) return;
+  async function updateQuantity(id: number, quantity: number) {
+    if (quantity < 1) return;
 
-  setCart((currentCart) =>
-    currentCart.map((item) =>
-      item.id === id ? { ...item, quantity } : item
-    )
-  );
-}
+    const response = await fetch("/api/cart", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId: id, quantity }),
+    });
+
+    if (response.ok) await loadCart();
+  }
 
   return (
     <CartContext.Provider
-      value={{ cart, addToCart, removeFromCart, updateQuantity }}    >
+      value={{ cart, addToCart, removeFromCart, updateQuantity }}
+    >
       {children}
     </CartContext.Provider>
   );
@@ -99,3 +161,4 @@ export function useCart() {
 
   return context;
 }
+  
