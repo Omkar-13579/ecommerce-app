@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
@@ -9,24 +10,27 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-
-  async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
+  const router = useRouter();
+  
+    async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage("");
 
     const { error } = await authClient.signUp.email({
-      name,
-      email,
-      password,
+        name,
+        email,
+        password,
     });
 
     if (error) {
-      setMessage(error.message ?? "Signup failed.");
-      return;
+        setMessage(error.message ?? "Signup failed.");
+        return;
     }
 
-    setMessage("Account created successfully!");
-  }
+    router.push("/");
+    router.refresh();
+    }
+
 
   return (
     <main className="mx-auto max-w-md p-6">
